@@ -1,0 +1,112 @@
+1.Linuxmint Ubuntu
+在PC双系统linuxmint下进行了gcc的安装，但是gcc是针对C语言的编译，无法通过compiler test文件的指令python test.py g++。所以应该下载针对C++的g++。在linuxmint中，linuxmint属于Ubuntu，可以用sudo apt-get instal命令，但并没有可以安装的包存在，而且在mint中使用的是Anaconda的3.6版本，需要用conda指令实现python2.7和python3.6两个环境的转变。
+2.Scientific linux red hat
+最终决定尝试在Virtual machine中尝试。VM使用的是Scientific Linux red hat版本 （SL），要使用yum install命令，但不巧的是yum源有问题，不能下载g++，所以选择更换yum源：http://mirrors.163.com/.help/centos.html 更换yum若遇到lock情况：http://blog.csdn.net/testcs_dn/article/details/48711805  然后使用yum install gcc-c++命令进行g++的下载。最终进入scons-2.2.0文件夹内，用vim编写compiler test文件https://raw.githubusercontent.com/RosettaCommons/rosetta_clone_tools/master/rosetta_compiler_test.py ，并用python test.py g++进行测试。
+3.最终结果
+Rosetta compiler support test.
+
+This script will attempt to test various advanced compiler features which Rosetta uses.
+
+It will produce a report detailing those items which are supported by your compiler
+and those which are not.
+
+Call with the compiler you wish to test, including the path if it's in a non-standard location:
+
+    ./rosetta_compiler_test.py g++
+
+    ./rosetta_compiler_test.py /usr/local/bin/clang++
+
+Be sure to use the C++ compiler (e.g. 'g++' or 'clang++') rather than the C compiler ('gcc' or 'clang'),
+and run any package/module loading commands your cluster needs to enable the appropriate compiler.
+
+Clang users also may want to try adding '-stdlib=libc++' to the commandline to see if that helps things.
+
+You can pass '-v' to get details about the errors.
+
+[root@localhost scons-2.2.0]# python test.py g++
+Testing compiler 'g++', reporting as:
+	g++ (GCC) 4.8.5 20150623 (Red Hat 4.8.5-16)
+
+Main tests:
+
+AUTO:                   	Pass.
+BIND:                   	Pass.
+CHRONO:                 	Pass.
+DELEGATING CONSTRUCTORS:	Pass.
+DELETED CONSTRUCTORS:   	Pass.
+IN-CLASS INITIALIZATION:	Pass.
+INHERITING CONSTRUCTORS:	Pass.
+INITIALIZER LIST:       	Pass.
+LAMBDA:                 	Pass.
+MAP AT():               	Pass.
+MOVE:                   	Pass.
+NULLPTR:                	Pass.
+OVERRIDE:               	Pass.
+RANGE FOR:              	Pass.
+SMART POINTERS:         	Pass.
+UNORDERED MAP:          	Pass.
+
+Optional tests (not needed for standard compiles, but for extra features like multithreading):
+
+ATOMIC:                 	Pass.
+CONDITION VARIABLE:     	Pass.
+MUTEX:                  	Pass.
+REGEX:                  	<<<FAILED! (Compiled but did not run.)>>>
+THREAD:                 	Pass.
+THREAD LOCAL:           	Pass.
+
+Summary:
+Main Tests:             	16 of 16 passed
+Optional Tests:         	5 of 6 passed
+
+Your compiler should work for standard Rosetta compilation, but may not work with all extras builds.
+
+这样就成功解决scons基于g++进行编译的问题。接下来的工作就是清理内存进行rosetta的编译和测试。
+
+4.Scons安装：http://www.cnblogs.com/xuqiang/archive/2013/01/23/2873729.html
+
+5.将整套系统重新搬至实验室电脑，安装Oracle Vitual box：
+V-box：将sl安装到Oracle VM virtual box中， 需要安装增强功能，安装增强功能出现bug时，需要yum以下内容：http://blog.itpub.net/29191018/viewspace-2132107/
+
+1.yum install -y gcc*
+2.yum install -y kernel-devel 
+3.yum install kernel
+安装完成后结果如下：
+yum list gcc
+yum list make
+yum list kernel kernel-devel
+
+
+6.virtualbox共享文件夹无访问权限问题解决方法：
+http://www.cnblogs.com/zhuguanhao/p/6192777.html
+早就困扰了，这次新装虚拟机又碰到了，记录下来。
+这篇文章主要介绍了virtualbox共享文件夹无访问权限问题解决方法,造成这个问题的原因是不跟virtualbox在同一个用户组,所以加入同个组即可解决这个问题,需要的朋友可以参考下
+virtualbox的共享文件夹一般都挂载在/media下面，用ll查看会发现文件夹的所有者是root，所有组是vboxsf，所以文件管理去无法访问是正常的，解决方法是把你自己加入到vboxsf组里面。
+复制代码代码如下:
+sudo usermod -a -G vboxsf yourusernanme
+重启，就可以了
+
+7.无法双向(特指windows向linux中)拖动文件：
+http://blog.csdn.net/u010140575/article/details/54016558（作用不大可参考）
+http://tlharry.blog.51cto.com/7140929/1738009
+http://cache.baiducontent.com/c?m=9f65cb4a8c8507ed4fece763105e8d3d4f07dd743ca080462482d45f93130a1c187ba0fc7063565f8e99616001a84c5aedf23176200357eddd97d65e98e6d27e209f5643676ff55663a00edfcb5154c037e05cfeae69f0caf225e3aec5a5da4323c844040a9781884d7164dd6e80506aa3e0de1b4b4810cbbd6d2fe859063eef5357c64cee9141797684e1dc2c5bb25dc7176680df30a74d18a212d4086d2453d148a6785531439458268f534c73859a5bf05a085757c15fb2c9d6c6ec5ffcaafd30e8edbdad38e26bf1b4ecee064267538a32cedbaac64e&p=8461c54ad6c347fa02a4c7710f5d86&newp=c3759a45d6c51db506b3c7710f448923161cda386a848d0a3b8fd12594634f171c0ba7ec67634b598fca786104a84d59e0f03075300225b298ca8a40deafd4456edf653b2740d01d088d47&user=baidu&fm=sc&query=%CE%AA%CA%B2%C3%B4%B0%B2%D7%B0%C1%CBvirtual+box+%BB%B9%CA%C7%CE%DE%B7%A8%D2%C6%B6%AF%CE%C4%BC%FE%B5%BD%D0%E9%C4%E2%BB%FA&qid=c1d5f29f0007346e&p1=1
+
+8.Sudoer:
+http://blog.sina.com.cn/s/blog_5432f27301010iee.html
+
+9.Abrt找回
+
+10.利用Scons进行rosetta的编译：
+"cannot find -lz"
+Rosetta requires the zlib compression library to be installed on your computer in order to properly compile. Talk to your system administrator about installing the development version of the zlib library. (The "development" version of the library is needed so that Rosetta can compile against the library.) 
+For Ubuntu and related distributions, install the zlib1g-dev package (e.g. with sudo apt-get install zlib1g-dev)
+Redhat ：yum install zlib-devel
+
+11.
+设置IPV6：
+IPv6设置方法
+https://jingyan.baidu.com/article/22fe7ced67c9443002617f94.html
+ipv6通道怎么打开？
+https://zhidao.baidu.com/question/272136850.html
+命令提示符怎么以管理员方式打开
+https://jingyan.baidu.com/article/ca41422fff77021eae99ed86.html
